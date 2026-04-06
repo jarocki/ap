@@ -1,0 +1,1507 @@
+{
+  "topic": "Adversary Pursuit: Design a gamified cyber threat intelligence hunting and OSINT pivoting framework as a v1 multi-platform Python CLI application. The interface should feel like a combination of Metasploit (modular console with commands, sessions, workspaces) and CTFd (scoring, challenges, progression, team leaderboards). Research: (1) The best Python CLI frameworks for building Metasploit-like interactive consoles (cmd2, prompt_toolkit, rich, textual, etc.), (2) CTFd's architecture and gamification patterns (scoring, badges, challenges, modes), (3) Comprehensive CTI and OSINT data source APIs from GitHub awesome lists (awesome-threat-intelligence, awesome-osint, awesome-ioc) including VirusTotal, Shodan, Censys, PassiveTotal/RiskIQ, URLScan, HaveIBeenPwned, Maltego transforms, and OSINT Tool aggregators, (4) Existing open-source threat hunting frameworks and their architectures (MISP, OpenCTI, TheHive, IntelOwl, SpiderFoot), (5) How to structure a plugin/module system for extensible tool integration. Focus on practical implementation patterns for Python 3.12+.",
+  "provider_count": 2,
+  "success_count": 1,
+  "warnings": [
+    "openai failed: HTTPError: HTTP 400: Bad Request (after 0.5s)"
+  ],
+  "results": [
+    {
+      "provider": "openai",
+      "success": false,
+      "report": "",
+      "citations": [],
+      "model": "unknown",
+      "elapsed_seconds": 0.5,
+      "error": "HTTPError: HTTP 400: Bad Request"
+    },
+    {
+      "provider": "gemini",
+      "success": true,
+      "report": "# Adversary Pursuit: Design and Architecture of a Gamified Cyber Threat Intelligence and OSINT CLI Framework\n\n*   **Key Points**\n    *   Research suggests that combining the interactive, module-driven architecture of Metasploit with the gamified, objective-based progression of CTFd could significantly enhance the engagement and skill acquisition of cybersecurity practitioners.\n    *   It seems likely that the most robust foundation for a Python 3.12+ interactive command-line interface (CLI) is the `cmd2` framework integrated with `rich` for terminal formatting and `prompt_toolkit` for readline history, as opposed to pure Text User Interface (TUI) libraries like `textual`.\n    *   The evidence leans toward using `importlib.metadata` and Python Entry Points (`entry_points.txt` or `pyproject.toml`) combined with `typing.Protocol` to establish a scalable, side-effect-free plugin architecture.\n    *   Existing Threat Intelligence (TI) platforms, notably OpenCTI and IntelOwl, demonstrate that an intermediate graph-based data model (such as STIX 2.1) and a microservice-inspired modular design are essential for complex Open Source Intelligence (OSINT) pivoting.\n    *   Implementing a dynamic scoring system with parabolic decay models, mirroring CTFd, is generally considered an effective method to balance challenge difficulty and extrinsic motivation organically.\n\n### Executive Summary\nThe domain of Cyber Threat Intelligence (CTI) and Open Source Intelligence (OSINT) gathering often suffers from a steep learning curve and disjointed tooling. Analysts are frequently required to navigate a myriad of disconnected scripts, web portals, and Application Programming Interfaces (APIs). The proposed framework, \"Adversary Pursuit,\" seeks to bridge this gap by synthesizing the familiar, tactile command-line experience of the Metasploit Framework with the engaging, pedagogical mechanics of Capture The Flag (CTF) platforms. This report explores the architectural design required to instantiate Adversary Pursuit as a version 1 (v1) multi-platform Python 3.12+ CLI application.\n\n### Methodological Approach\nThis architectural blueprint is derived from an exhaustive analysis of existing open-source ecosystems. The design incorporates research into Python-centric CLI frameworks, gamification theories applied to cybersecurity education, data standardization protocols (STIX 2.1), and advanced plugin discovery mechanisms. By dissecting the structural paradigms of established tools such as SpiderFoot, TheHive, IntelOwl, and Maltego, this document formulates a unified software engineering strategy tailored for modern Python development.\n\n***\n\n## 1. Interface and CLI Framework Evaluation for Python 3.12+\n\nThe foundational layer of the Adversary Pursuit framework requires an interactive console that mimics the immersive, stateful environment of Metasploit (`msfconsole`). The interface must support workspaces, session management, dynamic module loading, tab completion, and visually appealing output formatting [cite: 1, 2].\n\n### 1.1 Comparative Analysis of Python CLI Libraries\nWhen evaluating Python libraries for building interactive, line-oriented command processors, developers must choose between traditional command loop processors and modern Text User Interfaces (TUIs).\n\n*   **cmd and cmd2**: The standard Python library provides the `cmd` module, a bare-bones framework for line-oriented command interpreters [cite: 3, 4]. However, `cmd2` acts as a \"batteries-included\" extension, transitioning developers from the \"bronze Age to Iron Age in terms of interactive cli\" [cite: 4]. It is highly recommended for applications operated primarily via interactive CLI [cite: 4]. `cmd2` provides robust history management, alias creation, macro execution, and powerful tab completion natively [cite: 4, 5]. Crucially, it utilizes `prompt_toolkit` to provide a pure Python, cross-platform readline experience [cite: 3].\n*   **Textual**: While `Textual` is a highly capable framework for building complex TUIs, community consensus indicates that it currently lacks robust support for standard terminal use cases like a native REPL (Read-Eval-Print Loop) console [cite: 6]. Attempting to embed a `cmd2` instance inside a Textual widget is notoriously difficult and often fails to replicate the true standard input/output terminal feel expected from a Metasploit clone [cite: 6].\n*   **Rich**: `Rich` is designed to generate beautiful, formatted terminal output, including tables, syntax highlighting, and progress bars [cite: 7].\n\n### 1.2 The Selected Stack: cmd2 + Rich\nTo achieve the Metasploit feel, Adversary Pursuit will utilize `cmd2` as the core execution loop and `rich` as the rendering engine. `cmd2` natively supports Rich Consoles through specialized base classes such as `Cmd2BaseConsole`, `Cmd2GeneralConsole`, and `Cmd2ExceptionConsole` [cite: 8]. This allows the framework to handle core routing logic based on global settings (e.g., `ALLOW_STYLE` and `APP_THEME`) while preserving Rich's layout capabilities [cite: 8]. \n\nBy inheriting from `cmd2.Cmd`, Adversary Pursuit can immediately instantiate a command prompt (e.g., `adversary-pursuit> `) and provide built-in commands, scriptability, and pipeline redirection [cite: 4, 7]. This satisfies the requirement for a Metasploit-like `msfconsole` where users can type `use osint/domain/subdomain_enum`, altering the state of the prompt and loading specific module contexts [cite: 9].\n\n## 2. Metasploit-Inspired Architectural Paradigms\n\nMetasploit's success as a penetration testing framework stems from its rigid yet highly flexible internal architecture. Adversary Pursuit will adopt several of these conceptual models to organize CTI and OSINT workflows [cite: 1, 2].\n\n### 2.1 Modular Namespace and Command Structure\nMetasploit categorizes its functionalities into distinct repositories: exploits, payloads, and auxiliary modules [cite: 1]. Adversary Pursuit will utilize a similar namespace hierarchy:\n*   `modules/osint/`: Modules that query open-source public APIs without alerting the target (e.g., WHOIS, Shodan).\n*   `modules/cti/`: Modules that query threat intelligence platforms (e.g., VirusTotal, OpenCTI, MISP) for known indicators.\n*   `modules/pivoting/`: Logic that takes an artifact (e.g., an IP) and maps it to related artifacts (e.g., domains, SSL certificates) mirroring Maltego's transforms [cite: 10, 11].\n\nCommands will replicate the Metasploit syntax:\n*   `search [keyword]`: Discovers available OSINT/CTI modules [cite: 9].\n*   `use [module_path]`: Changes the context of the `cmd2` console to the specific module [cite: 9].\n*   `show options`: Displays required variables (e.g., `API_KEY`, `TARGET_IP`) [cite: 9].\n*   `set [variable] [value]`: Configures the module parameters [cite: 9].\n*   `run` or `exploit` (alias `hunt`): Executes the module logic [cite: 9].\n\n### 2.2 Workspaces and Datastore\nMetasploit utilizes a PostgreSQL backend (`msfdb`) to separate engagement data into workspaces, ensuring that targets, credentials, and notes from one pentest do not bleed into another [cite: 1, 12]. Adversary Pursuit will implement a SQLite or PostgreSQL database via an Object-Relational Mapper (ORM) to create **Workspaces**. Each workspace will act as an isolated graph, storing STIX 2.1 formatted cyber observables (SCOs) discovered during a specific hunting session. \n\n### 2.3 Sessions\nIn Metasploit, a \"session\" typically refers to an active command shell or Meterpreter connection established on a compromised host [cite: 12]. In the context of Adversary Pursuit, a **Session** will represent an active, authenticated connection to a third-party intelligence stream (e.g., an active WebSocket to a MISP instance or a long-running SpiderFoot correlation task). Users will be able to background these intelligence-gathering tasks and interact with them using a `sessions -i [id]` command.\n\n## 3. Extensible Plugin and Module System Design (Python 3.12+)\n\nTo ensure Adversary Pursuit is extensible, it must implement a robust plugin architecture. The historical approach of using `importlib.import_module` alongside `pkgutil` to scan filesystem directories for plugins is considered an anti-pattern in modern software engineering [cite: 13]. Scanning directories forces implicit import ordering, risks import-time side effects that can crash the core application, and tightly couples the core system to internal plugin implementations [cite: 13].\n\n### 3.1 Entry Points and importlib.metadata\nA scalable plugin system treats plugins as versioned packages, explicitly enforcing boundaries [cite: 13]. Adversary Pursuit will leverage Python's `importlib.metadata` library and the Entry Points interoperability specification [cite: 14, 15]. Entry points allow an installed distribution to advertise the components it provides so that they can be discovered dynamically at runtime [cite: 15].\n\nIn the `pyproject.toml` or `entry_points.txt` of a third-party plugin, the developer will declare:\n```toml\n[project.entry-points.\"adversary_pursuit.modules\"]\nshodan_ip = \"ap_shodan_plugin.main:ShodanIPLookup\"\nvirustotal_hash = \"ap_vt_plugin.main:VTHashCheck\"\n```\n\nThe core Adversary Pursuit framework will load these modules safely without blindly executing file system paths [cite: 13, 16]:\n```python\nfrom importlib.metadata import entry_points\nfrom typing import Dict, Type\n\ndef discover_modules() -> Dict[str, Type]:\n    discovered_modules = {}\n    # Python 3.10+ select interface\n    eps = entry_points(group=\"adversary_pursuit.modules\") \n    for ep in eps:\n        try:\n            # load() resolves the value to the actual class/function\n            plugin_class = ep.load() \n            discovered_modules[ep.name] = plugin_class\n        except Exception as e:\n            print(f\"Failed to load plugin {ep.name}: {e}\")\n    return discovered_modules\n```\nThis architecture ensures that plugins are versioned, installation is explicit via package managers (like `pip`), and import errors are strictly isolated to the failing plugin rather than taking down the entire `cmd2` application [cite: 13, 15].\n\n### 3.2 Defining the Plugin Protocol\nTo maintain strict contracts between the core framework and third-party modules, Adversary Pursuit will utilize `typing.Protocol` (structural subtyping) instead of massive Abstract Base Classes [cite: 13]. Using `Protocol` ensures plugins remain lightweight while strictly adhering to the expected input and output signatures [cite: 13].\n\n```python\nfrom typing import Protocol, Any, Dict\n\nclass PursuitModule(Protocol):\n    name: str\n    description: str\n    author: str\n    \n    def initialize(self, config: Dict[str, Any]) -> None:\n        \"\"\"Called to initialize with API keys/config without triggering execution.\"\"\"\n        ...\n        \n    def hunt(self, target: str, options: Dict[str, Any]) -> Dict[str, Any]:\n        \"\"\"The core execution logic returning STIX 2.1 compliant observables.\"\"\"\n        ...\n```\nThis approach guarantees that plugin initialization remains side-effect free, separating the loading mechanism from the execution mechanism—a critical requirement for predictable startup times and safe failure handling [cite: 13].\n\n## 4. CTFd-Inspired Gamification and Progression Engine\n\nA fundamental differentiator of Adversary Pursuit is its integration of gamification to foster intrinsic and extrinsic motivation [cite: 17]. Borrowing from the architecture of CTFd—a ubiquitous open-source CTF platform—the framework will incorporate scoring, challenges, progression logic, and a virtual economy [cite: 17, 18].\n\n### 4.1 Challenge Types and Design\nCTFd supports various challenge structures beyond traditional string submission, including multiple choice, manual verification, and coding tasks [cite: 19]. In Adversary Pursuit, a \"Challenge\" is contextualized as an intelligence requirement. \n*   **Standard Challenges**: Finding a specific IP address associated with a known APT group's domain.\n*   **Pivoting Challenges**: Starting with a single email address and successfully extracting a target's physical location through Maltego-style multi-step transforms [cite: 10, 11].\n\n### 4.2 Dynamic Scoring Architecture\nTo accurately reflect the difficulty of an intelligence gathering task, Adversary Pursuit will implement Dynamic Scoring. In dynamically scored challenges, the point value starts at a high initial tier and decreases based on the number of users (or teams) that successfully solve it [cite: 20, 21]. This naturally calibrates the point valuation, ensuring that heavily solved (easier) challenges reward fewer points [cite: 20, 22].\n\nAdversary Pursuit will implement CTFd's parabolic decay function [cite: 20]. A parabolic function (as opposed to linear or logarithmic) ensures that higher-valued challenges experience a slower drop-off from their initial value, maintaining high stakes for early solvers [cite: 20, 22].\n\nThe mathematical logic is modeled as follows:\n\\[ \\text{value} = \\left( \\frac{\\text{minimum} - \\text{initial}}{\\text{decay}^2} \\right) \\times (\\text{solve\\_count}^2) + \\text{initial} \\]\n\n```python\nimport math\n\ndef calculate_dynamic_score(initial: int, minimum: int, decay: int, solve_count: int) -> int:\n    \"\"\"\n    Calculates the dynamic score based on CTFd parabolic decay logic.\n    \"\"\"\n    if solve_count >= decay:\n        return minimum\n        \n    value = (((minimum - initial) / (decay ** 2)) * (solve_count ** 2)) + initial\n    value = math.ceil(value)\n    \n    return max(value, minimum)\n```\nThe system tracks three core variables per challenge:\n1.  **Initial**: Original point valuation [cite: 20, 22].\n2.  **Decay**: The threshold number of solves required before the challenge hits its minimum value [cite: 20, 22].\n3.  **Minimum**: The absolute lowest point value the challenge can reach [cite: 20, 22].\n\n### 4.3 Hint System and Virtual Economy\nTo prevent practitioners from becoming permanently stuck, the framework will include a Hint system. Following CTFd's architecture, hints can be either free or carry a point cost [cite: 23]. If a user unlocks a paid hint, their aggregate score drops by the hint's cost [cite: 23]. Users cannot unlock hints if their score is insufficient, preventing negative point balances [cite: 23]. \n\n### 4.4 Leaderboards and Badges\nAdversary Pursuit will feature a local or networked database storing team profiles, recording First Bloods (first to solve), and calculating Elo ratings or simple point aggregations for a live leaderboard. Badges (achievements) will be awarded for behavioral milestones, such as executing a successful 5-step OSINT pivot without relying on a hint [cite: 17, 18].\n\n## 5. Integrating Existing Open-Source CTI and OSINT Architectures\n\nTo build a comprehensive intelligence tool, Adversary Pursuit must stand on the shoulders of giants. The framework's internal architecture will draw heavily from the operational patterns of established tools like OpenCTI, TheHive, IntelOwl, SpiderFoot, and Maltego.\n\n### 5.1 Data Modeling: The OpenCTI and STIX 2.1 Standard\nOpenCTI is a centralized platform designed to manage CTI data using a knowledge schema built on STIX 2.1 standards [cite: 24, 25]. The most critical architectural lesson from OpenCTI is that it operates as a transformation engine, not merely a passive database [cite: 26, 27].\n\nWhen Adversary Pursuit ingests data from a module, it must convert raw JSON into STIX Domain Objects (SDO), STIX Cyber Observables (SCO), and STIX Relationship Objects (SRO) [cite: 28]. \n*   **SDOs** represent high-level intelligence concepts: Threat Actors, Attack Patterns, Malware [cite: 28].\n*   **SCOs** represent technical evidence: IP Addresses, Domain Names, File Hashes [cite: 28].\n*   **SROs** define the links: e.g., an SRO connects a Malware SDO to an IP Address SCO (indicating command and control infrastructure) [cite: 28].\n\nBy adopting STIX 2.1 internally, Adversary Pursuit ensures that data collected from a Shodan query can be seamlessly mapped, exported, and correlated against data collected from VirusTotal.\n\n### 5.2 Case Management and Observables: TheHive\nTheHive operates as a Security Incident Response Platform (SIRP) [cite: 29]. Its architecture relies heavily on turning alerts into actionable cases and extracting \"observables\" for enrichment [cite: 29, 30]. Adversary Pursuit's workspace feature will mimic TheHive's Case Management. When an analyst starts a hunt, they open a \"Case.\" All OSINT indicators discovered during this session are tagged as \"Observables\" and attached to the Case timeline, providing an immutable audit trail of the investigation [cite: 29, 31].\n\n### 5.3 Microservices and Analyzers: IntelOwl\nIntelOwl automates the collection of threat intelligence by querying multiple sources simultaneously via a single API [cite: 32, 33]. IntelOwl's architecture is strictly modular, dividing tasks into:\n*   **Analyzers**: Retrieve data from external sources (VirusTotal) or internal tools (Yara) [cite: 33, 34].\n*   **Connectors**: Export data to external platforms like MISP [cite: 33, 34].\n*   **Playbooks**: Define a highly abstracted flow (e.g., given an IP -> run AbuseIPDB analyzer -> run Shodan analyzer -> push to MISP connector) [cite: 33, 35].\n\nAdversary Pursuit will implement an internal \"Playbook\" scripting language, allowing users to write simple text files that chain modules together sequentially, mimicking IntelOwl's automated enrichment flows [cite: 35, 36].\n\n### 5.4 OSINT Automation and Publisher/Subscriber Models: SpiderFoot\nSpiderFoot automates OSINT collection using over 200 modules to map attack surfaces [cite: 37, 38]. Its architecture relies on a core correlation engine that uses a publisher/subscriber model [cite: 38]. When one module discovers an email address, it publishes that artifact to an internal event bus. Other modules subscribed to \"email addresses\" (e.g., HaveIBeenPwned modules) automatically trigger, creating a cascading web of intelligence gathering [cite: 38].\n\nAdversary Pursuit will feature an `auto_pivot` setting within workspaces. If enabled, the core loop will utilize an internal event bus (potentially implemented via standard Python `asyncio` queues) to automatically feed discovered SCOs into relevant, enabled OSINT modules.\n\n### 5.5 Visual Link Analysis and Pivoting: Maltego\nMaltego excels at visual link analysis using \"Transforms\" (TDS or Local) [cite: 10, 11]. A transform is a script that takes an entity, queries a data source, and returns related entities, expanding a graph visually [cite: 10]. Although Adversary Pursuit is a CLI tool, it will implement a \"Graph State\" memory. Users can execute `pivot --target [Entity_ID] --transform [Module_Name]`. The resulting data will be stored as SROs (relationships), allowing the CLI to render text-based relationship trees or export the graph via Graphviz/GEXF for external viewing [cite: 11, 38].\n\n## 6. Comprehensive OSINT and CTI API Data Sources\n\nAn OSINT framework is only as powerful as the data it can access. Adversary Pursuit will include native support (via the plugin architecture) for APIs curated in repositories like `awesome-threat-intelligence` and `awesome-osint` [cite: 39, 40]. \n\n### 6.1 Vulnerability and Attack Surface Metrics\n*   **Shodan / Censys**: Search engines for Internet-connected devices, returning banners, open ports, and associated CVEs [cite: 40].\n*   **VulnCheck / NVD**: For assessing vulnerabilities and tracking exploit availability [cite: 41].\n\n### 6.2 IP, Domain, and DNS Intelligence\n*   **VirusTotal**: Comprehensive file, URL, and IP reputation database aggregating multiple antivirus engines [cite: 34, 39].\n*   **AbuseIPDB**: Community-driven blacklist for reporting IP addresses associated with malicious activity [cite: 39].\n*   **PassiveTotal / RiskIQ**: Advanced passive DNS, WHOIS history, and infrastructure profiling, crucial for tracking threat actor movements across hosting providers.\n*   **Spamhaus**: Authoritative IP and domain reputation source (SBL, DBL) [cite: 41].\n\n### 6.3 Data Breach and Social Media OSINT\n*   **HaveIBeenPwned (HIBP) / CredenShow / StealSeek**: For checking if specific email addresses or domains appear in known data dumps [cite: 40].\n*   **Sherlock**: A widely used OSINT tool to search for user accounts across hundreds of social networks, highly effective for social engineering footprinting [cite: 10].\n\n### 6.4 Threat Actor and IOC Aggregators\n*   **AlienVault OTX**: Open access to a global community of threat researchers delivering community-generated threat data [cite: 39, 42].\n*   **Ransomwatch**: Open-source ransomware tracking monitoring active extortion group leak sites [cite: 41].\n\n## 7. Practical Implementation Plan for Adversary Pursuit v1\n\nIntegrating the discussed paradigms into a cohesive Python 3.12+ application requires strict structural organization.\n\n### 7.1 Directory and Package Structure\nThe application will be packaged as a standard Python module using modern `pyproject.toml` standards.\n\n```text\nadversary_pursuit/\n├── pyproject.toml              # Build system, dependencies (cmd2, rich, stix2)\n├── src/\n│   └── adversary_pursuit/\n│       ├── __init__.py\n│       ├── core/\n│       │   ├── console.py      # The cmd2 entry point and Rich integration\n│       │   ├── workspace.py    # Database connection, Graph/STIX state\n│       │   └── plugin_mgr.py   # importlib.metadata entry point loading\n│       ├── gamification/\n│       │   ├── scoring.py      # Dynamic scoring math, hints, decay logic\n│       │   └── challenges.py   # Challenge definitions and flag checking\n│       ├── models/\n│       │   └── stix.py         # STIX 2.1 abstraction layer\n│       └── base_plugins/       # Core modules shipped natively\n│           ├── osint/\n│           ├── cti/\n│           └── pivoting/\n└── tests/\n```\n\n### 7.2 The Console Core (cmd2 + Rich)\nThe core CLI will initialize `cmd2` and override standard output to utilize `rich` tables and formatted text [cite: 4, 7].\n\n```python\nimport cmd2\nfrom rich.console import Console\nfrom rich.table import Table\nfrom adversary_pursuit.core.plugin_mgr import PluginManager\n\nclass APConsole(cmd2.Cmd):\n    \"\"\"The main Adversary Pursuit interactive console.\"\"\"\n    \n    def __init__(self):\n        super().__init__()\n        self.prompt = '[bold red]ap>[/bold red] '\n        self.rich_console = Console()\n        self.plugin_manager = PluginManager()\n        self.plugin_manager.load_plugins()\n        self.current_workspace = \"default\"\n        self.active_module = None\n        \n        self.intro = \"\"\"\n        [bold magenta]Adversary Pursuit Framework v1.0[/bold magenta]\n        Type 'help' or '?' to list commands.\n        \"\"\"\n\n    def do_use(self, args):\n        \"\"\"Load a specific OSINT/CTI module: use osint/shodan\"\"\"\n        module_name = args.strip()\n        if module_name in self.plugin_manager.plugins:\n            self.active_module = self.plugin_manager.plugins[module_name]()\n            self.prompt = f'ap [blue]{module_name}[/blue]> '\n            self.rich_console.print(f\"[green]Loaded module {module_name}[/green]\")\n        else:\n            self.rich_console.print(\"[red]Module not found.[/red]\")\n\n    def do_run(self, args):\n        \"\"\"Execute the currently loaded module.\"\"\"\n        if not self.active_module:\n            self.rich_console.print(\"[red]No module loaded.[/red]\")\n            return\n            \n        # Execute plugin logic and return STIX 2.1 observable\n        results = self.active_module.hunt()\n        \n        # Gamification hook\n        self._check_challenges(results)\n```\n\n### 7.3 The Gamification Event Hook\nWhenever an OSINT or CTI module returns an artifact (e.g., an IP address, a hashed password), the application intercepts this data before storing it in the workspace datastore. It passes the artifact to the Gamification Engine to check against active challenges.\n\n```python\ndef _check_challenges(self, observable: str):\n    \"\"\"Check if discovered observable matches any active challenge flags.\"\"\"\n    for challenge in self.active_challenges:\n        if challenge.verify_flag(observable):\n            pts = challenge.award_points()\n            self.rich_console.print(f\"[bold yellow]Challenge Solved! You earned {pts} points.[/bold yellow]\")\n```\n\n## Conclusion\nThe architectural design of the \"Adversary Pursuit\" framework successfully maps the robust, tactical command-line usability of the Metasploit Framework onto the engaging, pedagogical structure of CTFd. By leveraging modern Python 3.12+ features—specifically `cmd2` for interactive loop processing, `rich` for interface rendering, and `importlib.metadata` for secure plugin extensibility—the application guarantees high performance and deep customizability. \n\nFurthermore, by adopting the STIX 2.1 data schema utilized by leading intelligence platforms like OpenCTI, and implementing the microservice analyzer logic of IntelOwl alongside the publisher/subscriber OSINT mechanics of SpiderFoot, Adversary Pursuit is uniquely positioned as a premier, gamified intelligence-gathering ecosystem. Through dynamic parabolic scoring and hint economies, it promises to effectively train the next generation of security analysts while providing a functional, production-ready OSINT toolkit.\n\n**Sources:**\n1. [securedebug.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHb5Ancr92ZS8eD858Gw2I2AnXML6j18L_zgXcDzLi0IoUo-ARYPj3aDD0jSjkSEQ86BWrIjOVjBxcaXXjER3qSDN-seusn4DgOmRLMxsa8xwC9gt5r3y5nVtYpgJ2_WqP8I9wPYjAlcrngxm3ArQK_6IAnMSmfidhG_UwjWKk=)\n2. [imperva.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6cJ5YvRLAPvKLzKtjyjnejneWv3wz_bz_KxYqbd0H0XSspB2hinGx1JgP8m_ZUriHsm-wx9oSzsycPOD6lbjeXcfjf9bnlIENppkpkUBbVJB5wqwCOhtck66f94bHEh7bKIF7U7Nyulp4AQATU6ygdfRGpw==)\n3. [readthedocs.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6T0i6PEw3BmQnc16rIyASi5tlZUmtNMW9KzBOBpIw7NsDF-Xm2W5YVEvjHsrN1IDfQnIbrh6DA2ou0CLI29jhfyWPZ3ntj-SpoO_LGgTxj1-pzH9fupy4QRu0GU0NoS12qHa-TB0EhSwQ)\n4. [plainenglish.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkZgFVv_niaSbwkG5jBLeOlM3g_6Fm9_fwIZdID3XkJvtsJOXWG6johVnww85LR_VV4_03FXHYqecUF4wiTYOhYuQYDrXn1Dr-IdApzjOHELZBzLEbkB6FsUIYEJPiQFD4htzvIENa1JKg-ULiNBIbEX07)\n5. [github.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4_Yez_Rq1F6qvenTu5gVOxTODd9Z3OhcO-4jEITZ39PVDXV8g9urECu_OswZcm_RQWo4XNzsOnYtltlyuV40KcyvTpAm4GhGNElQgFTJLp4BlFqtiqa-4PA==)\n6. [github.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFesz9KI98fi7k8vMJjJBWxugua_V_x14CjCyITs65aG4QSzgFc3HndCpvEbBGMci8C1svQAtgP6Lfjhgx_zs7O66fD2V8IUT6T8HG3GkALN89lxM_INEpYtjh8-sDQwHpjrWxaJYu5474NbjY=)\n7. [mteke.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoL5RLJAdXksEvTGeT76EbV2kJKYo1qCh2gv1v43jtzAECKmIg479EQXG-Rdfit9WD8DtpFu6JBN1i26neeXg-jrew2x8F_rGEDij1FFy8FGQDvoD9C2VbOaNhE-uCSZWj245zImbWb90M2btSEoHFblq4GLyNnfQ3K9wkp0lfdzft1JFdfmAxMQhGwUB8NBM=)\n8. [readthedocs.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGb6z8B2_EBy0Rr3aGG6nv64zEqqqRqxZGwNPIXuyUCA4usHQUdrfRRTTcb983HFRA65YbFfWwgqRcjkofZ-nrFqHUjl-MT6vZmbh7loqCKVwBoQYdFVXg_YVqS6KQDthR-PnozYvTleRXjZQ==)\n9. [hackingtutorials.org](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4D5wFKfJ4uFg2Q1f2Zs_7ib9Cg8RMGyF6dZMC0Y2d4KH9VnQrUuF768RQkJ_2WnFmBlhgRULT-DlU5MGLbqHQ7nnp4OapKub9eP6rx52iNAEC7pTuxV3sPFMNI8OFsW3Z4WFaujkGknjBkfI8u3h_uZGx9a9J-NAfNYvmDTiuqg==)\n10. [netragard.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHaJMJPXbZhqZV0oJ8dM25tQ_E-ln0nQP0q9HwzmjEKkhrNWCMaNwoEmfIWoxvPXzrq28lKKfxfnuqclddWoTwnsWM-tMlwjdTyLEpiUIVYaLaQ0RpMU93qmj9z6NH3PZfdKR48HWLD-2qsESyUEN6SqvVvTNAaO6Nnlw==)\n11. [medium.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHheMSG0YZjU56Mj5Qj5-KVPEH9Ta13rW0Pmu5VoiUaTj-pOAhyaZJPvTu9RazUgZ-LcbqPpSIDyf1ysy77ZzW35gEaOAbWoyl9h535fMu9ZwPn605Z0_iqfwOGMU26WkN9G1vsyAtbILHHpQ7ZGIKwaQTXX7szI9Prj2UJygdinhZ1PNPYwVSLqZ9QjRM8QS_Cn8CNkJx5EzVUutY=)\n12. [rapid7.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzjsPEgw9i67N4Ra9sM2SGzxPoCWtzOQOoj_rCKJF7jmzX2EOtPFVDQRVX2bGNFxSbdJB78qDZjPvjOoByb-bUGp8ik9gw1biroA2ad15RWKHOV6H57dMh0KzTijX25ZA8KO2tAHCtvyOUitn9b8Jtezoc4BqCGuHMN-B0qfwA)\n13. [medium.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEk87iYxYrcpFWuu-IM97o1rWb9MXdIy9RwI4cSm92zHA8wSxR8RVTB2oi8018QC2AsyszQowT4ZyjLx65dh-bl0lTMwHmiJ3EMitRs99we2EcP_-dIWJpX_I0dK-I1BkX_npl2dqWmAKFJGlx5wa3VJZl2SnsDLD7Z89Llmi7zKZoIqoZFGdMU4gIXE8rKj8x4p5ca7Goj5izWC3Zlpnkk1xJCrClSHQ==)\n14. [python.org](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwVdZEw0tVXb6SJPLvNFrj8_QY8FmRW9XC83hn8cYwZY-mLAPx1bbyDjA_eDt1M5JVANFxUPDIUH9gXBvlT-T7qW4rrQemMTC5d4NBxQ4h33m0vHgP0bwdP4Vt9_dThwgFEnh-mgUa5KuzrZJsG6s=)\n15. [python.org](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYbpSZ2SDyhIXn77deU4xZVMoK2rLdmT6kfOsbKGf4gftkCwEMONFehw6stqDoDnd3kS4hAyTR-w-jqsJSe5-P0ao39e_tKgtkTgMlsXw_evQEJUwTVNiWQSAulabOhlHno5qpn39PvRHd40h0JCk=)\n16. [python.org](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKVEUxOpQeanz_-JmkobXNtm1mPxMK4k4t-JaEhQPX1WikwkL_DyI3Q7SLNqhBjitJDWfEmgTYxBcGejBGRgNRw9OImKT5zbd5G9AayOE_70teKpRLtF82JcOuP_7B2ORGXaK6h-6IP2yCOZoS8d4gRjg=)\n17. [polito.it](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlKhgv3FZKiJloRdBN46fwOeKqIwPBB9_KRt8s82b6B5THemgDlpAxVwUYinj4uGjyXbdALDSSR65BogvKpYmlh6B3DWUpKOGYakUUj4KUfgTdKpp2KizLt4bxc8qGCHt-ePV7a8xjOb4=)\n18. [diva-portal.org](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0yDhjVw_w4kAQLSdzafsURdAl0jaPt0QOLG7AofRDsKO0N0exKDfWQaTPMtIVyu_iwtxBxOCn2M180b3I93kzhM_pbm38eSOD1WXsWAl1nJB9j9wRrAcHFa5oEePt2Ugn-L7TG3MHyA_N1xTaJh560hzxzTT9Xg==)\n19. [nih.gov](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2H7hvV4jSmEA_2KDnJ3jr0Pm95NQ3Om8o_O--FMCASxyKA9GVy5WL5GhFtqVGjkJBYfaCimBWFpNWrW_K0gN_00R-z0Tpte4-LJWsnEPCKVECC6tU_WIYb4jc9fqjsjlSdLHQQj9y)\n20. [ctfd.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLWoVVvuyF5nR3AuK2CzV5SEFiHkBDDyawPsslx-uCebk2ixt6cYXNQB0-ULMuSISpuPdUWpg1tl519sPvHd2eEvs6xhR0fnIqfohKUBqBjjAuZ0qsnKPNcpWlXjDobBM3nQW1XAt0ddfq1K39Z5n7)\n21. [ctfd.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGfh5TJJTepsvvRf20PZLXHQCwxqcpxkZ0WPwSyc7QtKluweA398njfljHhKokmNZPVi8A0LoEoTvZSg7U2t4EhEUUjXtRSv4MsqEuass-Qu2qZ7moiPxVUiQRHGPNKWLhR9WnARDmkXkxSnCcR4wZFVC2uOPxItU0=)\n22. [github.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkvQAdDItQsZ0L_J4_VCSJLSXTugV3a0PirFT3a4ssM0XIpqZd6KToxh7EIdilgAkRvrfe6uh1bTNM8XsJ80B0MeXWQMgZKUoIdbPijXLwHuHkJdhwEMSOck3x48Ho2k3qQ_jPRTsTpHsrmf5XWtUVT-tH1g==)\n23. [ctfd.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGINl356VUvKxTnYLbp20dqqe-jDBXmOf3tNYKIjht5KgCXS0YTxN8s4-F23loml_N7hJQ_HWOMQf8l1wKoZppo4hpnb21H0OUIqsRUK6oPsEknlL63OjqshM4H3QXhNpn1)\n24. [helpnetsecurity.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJ1dNmnmPqbQD-4jSw9Pfn96giugvXYDyXyeUa1Kvx1jHlRv57Ai29ka6Orfu08MNrOgb00m0wuH-Sn_jzEMpgrdO0jBSyP8HJdy5yhOP7Ku1mAZT9XaMAIZnhC-wDZ78_Basnv0OlTaDmiS2rDKNyN_oxz0NtJOf6sowYLt5ev4im0gCKU7qyKDthC6cdm94xOpVDw8h8dA==)\n25. [sredevops.org](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyDnn2YDmF0WF_BDh_rZbpjz9uGcL43SvR_oRftl78UShaMZeJ6DhxyRGgB80qZ1velT8af2e40swowwj6mHy6TZi7VU5XjaMXvuR6AF_ori0Y_tZr3Um8abFfRRXWuMmR2vILcNbVcez593HPWc_ub2wKzlIvyBPXYp9J_-ouYBb4duiv90MZCHAKpmhC)\n26. [dogesec.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEU-vh5A_4TdpDhb9KRCQQmJFhXqyuWghP5QJKwURUWBYqfoFuBVLPLFzWnlgHCXLnjjngD-uPkm4gJq0X0lm3K4aApHPJhwmRrqfTudEpvGh5aucSb7e5yCKtodgWHKKEJQJ_dWol7xS9bmjd0MLG)\n27. [silentpush.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoqHouqg43hww36TdJ_tupeHw15vH6ktxTPP5-uB_diLMhfqf9dLlWQSeUv36G9t3c6G82fqarrpwRgkhuKg98ffZmIDqawCTK2ukWZc3K8_Vq9iDX1cqNSE1EWsSs)\n28. [opencti.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmxLqGdGbK42U0lunl3C9tp7W8XQDwK3WMTVgQp6C7wKmxe9JuuzdUnf1VY29tlSYmPaHlqbAiTwa_AGKALuMw4vTfNHH-9kSrkJ6cDGRqAPCM98jx6A6TSq7fvDJ2uLcubfg-6hk=)\n29. [mintlify.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHUPggL0UVhTJKkrf7qC-THYDKO6fuNCJdIMx3ABKfHLT_DGZxaAX6ijtE_SMOcl6rUtUzZseXJypoZJQ9sHdJlsbuIR_UqzHQ4UgVNXYmWjSBv0ZUU-9lMIX5kfYMKNVLLX8vvpe4jAc-1qgCNv3hFlIPu2z-GebgPD-9lLLTJzIF88yHZw2eAcYTWs9tiQ==)\n30. [medium.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOgGm1zoOiuCD9s4U-QPEXzTVTHRMqnjGvcjO29Jj54JccqRXOZ9tG0up10VyC1ZioSQkd4Y1xFyrQz1P7Ycw_Tbl93NOSrl1rwq91H2Twdp1Mlfs6yWDQoFUIi5905xGDqOmceMqWzZWw5qWHGHpTe2ij-zXEawa2a3tBoSzTPCPBg0_z4tKqmf7IqEIcr-PoUV6KxLdhtjNgIDhEfF9kwDt59nmmsN9gcdM8e3OcgI6NnByi)\n31. [oneuptime.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHokac4gd_ZLtmfGfgGo_cE7ay4o6L6ZSsEbvP0zRRLKJlNN9FbPqNGJ3V0Be1YOVFYJrTSJUyZxb7VlebZhyrzh3zqCIDyDxhhtnFCgjCiWEl9_5gf5mrNiNJ1LZ7lU7jQEfxReVo_Y-jpTukpepz6_yskOe_CTIRUUXH_qDg8spoXdwMTOBTgt2LW2veD7Dx0yLMhXDuuxA==)\n32. [sourceforge.net](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuQ1au2Q-Cbu4FHgzYqMcqw_HhUj_gcxRIGDDGu7UJhJIj9N3wSBjKTG2Bs2LXn56AnLCBsCgYRTcg542QyY6S3IVumou25ENgoSdqRimTRHDyAr81h8CmtPxVwgaAbzwJ7PSU--3m)\n33. [loginsoft.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvmqyaK6Utnn6HWJ5WH1mMltr7yfMiT9Q3S-LO05J-OYuvGjc2GeHxSJqBDRiM3BKYF9yKCDw4Wf1Hb3z5qEBkkKDRnMMFu_yqavZHG76_pLwugUYJdbsICIgg23Y3eQOKi7GMPIKAzL2sFHZLMTxFRscIvzQzfd5Mtz68BXoGgjPqUZSkc7QJVesBAPEaac9Uo5bbKyLLTCEdBwjTznVZk2QeSyVR)\n34. [jyu.fi](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECOZJjve3uqqhx5upKhxvh1xrkDF0SuGrPFn5E5A6O6y1qD_lLZnPLa-R8_VHEnVIlWe_oUWOIyx0fhPKnQzIRDfsqdwMqLs0dbkpEwZu1dVs2ruzelViFrn3LkqqDxICDsLU8URLgcFe4KIYHtRRAW4SdM6HI0FKzRkNDdo1W5e4=)\n35. [github.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSxIFxNTcYqlC2YfVqxur2DyAXFQUD-8Pfzd7gzU6RJuB9FfQhnLaDpmVTqkFvP_Puwbx9t54kczukzJgkW1O4kAPVLeduao3YW1d4ruIZrBtZVhKCoWMBkM8dqhFlwUdbhYj9Nl8LVGjBc_E=)\n36. [github.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHl2yvtccFmWowUSLtGC4GY_LzEXSNGKyoW2EkSMtN_0HN0r2VUDoPFCbiogpNurFgT1HgWEwBKOuADRTdgLv2w2lGPLsklfuRk3pBtGwX23HbSSl8BXiPT8pD3V26utpHnSwzrXuZwJSi0jNBQrH-Arfzd)\n37. [shadowdragon.io](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCRfFR6nk_3ozNzFn87Ya2PdJqRLN79jlCYPsSYdf0LSRNkqW06T97Yc_i0Em1VVJbJWe077yU7PEywKfErHrcmbJeKZ9zkFjZBj-x6Ot-emRbp-ZnBLxaWrysh0ZGa5J6lIjo)\n38. [github.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZyKL4Ob5RVwVQckFQwbZdmOd8SFqziZCjgTRKRDQxb0dDfzZd8P4fL4AYADsoBXSMLzgXezcasgx67koDVXir2jzR2UO2nSQ2KP4Pww3FcEnoCl7ClMeHxnz0vvc=)\n39. [github.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBEMEa7BHaWy02PS2S0ZLSG7TkCKDx8f96xUPnvh_2rY95pJvDGe2BvvOITAMMvyUPtPQQEHSrWERkxd9i1SiUc2DOI4-KiliQDKLfxf0uIMwnbcNeaHclnkn6yLzECbV_p5KtdObvA3ShZdIk)\n40. [github.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOQ9B5x--evSHwIKBNgZZgm-xENDKkltAyl1PPTfFpy6ddzHRt2bd3jKXkdHPUJq5ey_6mVpdS8ypy5LIOZJ8GW2tBEnddNnwcLhtiTP3ZrcucyIzE_RkosYHxPg==)\n41. [threatintel.academy](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6vC29stex1y6J7vZYH9MK5fweptpmNngJ5KFfPQo_QcI7cfEAxqsdm_V7bGNYahHaQ2VnFNpQ3Jh0tnqt0yyDvycMeGvMPuRfWQHgr4NHUV-pURTZgVjd3HRP-yFZTpG6yETPeIojdgzcdiO4kC8N1yZJtuwwrM3wcMAZb7LlTYl2Y_-1n6kJi55AND_En72Izdc=)\n42. [medium.com](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExgPItn2cpLErwnOKxpbYZIrqz1jBpRk8hVO-7hzlER2cv9X1o0e5z4kMPe5p4vT330kN9RaUjMzmCLdYdHaXwVOaENNzjqkzUopLsg3pW2KptVTlR4FYp99Jhy7nGNclCGN3MiYwmz_cN4kfSbRemynRkfxMuyYC-q_KEF6YGtLM=)\n",
+      "citations": [
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHb5Ancr92ZS8eD858Gw2I2AnXML6j18L_zgXcDzLi0IoUo-ARYPj3aDD0jSjkSEQ86BWrIjOVjBxcaXXjER3qSDN-seusn4DgOmRLMxsa8xwC9gt5r3y5nVtYpgJ2_WqP8I9wPYjAlcrngxm3ArQK_6IAnMSmfidhG_UwjWKk=",
+          "resolved_url": "https://securedebug.com/advanced-metasploit-command-penetration-testing/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6cJ5YvRLAPvKLzKtjyjnejneWv3wz_bz_KxYqbd0H0XSspB2hinGx1JgP8m_ZUriHsm-wx9oSzsycPOD6lbjeXcfjf9bnlIENppkpkUBbVJB5wqwCOhtck66f94bHEh7bKIF7U7Nyulp4AQATU6ygdfRGpw==",
+          "resolved_url": "https://www.imperva.com/learn/application-security/metasploit/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG6T0i6PEw3BmQnc16rIyASi5tlZUmtNMW9KzBOBpIw7NsDF-Xm2W5YVEvjHsrN1IDfQnIbrh6DA2ou0CLI29jhfyWPZ3ntj-SpoO_LGgTxj1-pzH9fupy4QRu0GU0NoS12qHa-TB0EhSwQ",
+          "resolved_url": "https://cmd2.readthedocs.io/en/latest/migrating/why/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkZgFVv_niaSbwkG5jBLeOlM3g_6Fm9_fwIZdID3XkJvtsJOXWG6johVnww85LR_VV4_03FXHYqecUF4wiTYOhYuQYDrXn1Dr-IdApzjOHELZBzLEbkB6FsUIYEJPiQFD4htzvIENa1JKg-ULiNBIbEX07",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "HTTP 403"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4_Yez_Rq1F6qvenTu5gVOxTODd9Z3OhcO-4jEITZ39PVDXV8g9urECu_OswZcm_RQWo4XNzsOnYtltlyuV40KcyvTpAm4GhGNElQgFTJLp4BlFqtiqa-4PA==",
+          "resolved_url": "https://github.com/python-cmd2/cmd2",
+          "validation": {
+            "status": "valid",
+            "depth": 2,
+            "details": "Keywords found (10/18)"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFesz9KI98fi7k8vMJjJBWxugua_V_x14CjCyITs65aG4QSzgFc3HndCpvEbBGMci8C1svQAtgP6Lfjhgx_zs7O66fD2V8IUT6T8HG3GkALN89lxM_INEpYtjh8-sDQwHpjrWxaJYu5474NbjY=",
+          "resolved_url": "https://github.com/Textualize/textual/discussions/5041",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGoL5RLJAdXksEvTGeT76EbV2kJKYo1qCh2gv1v43jtzAECKmIg479EQXG-Rdfit9WD8DtpFu6JBN1i26neeXg-jrew2x8F_rGEDij1FFy8FGQDvoD9C2VbOaNhE-uCSZWj245zImbWb90M2btSEoHFblq4GLyNnfQ3K9wkp0lfdzft1JFdfmAxMQhGwUB8NBM=",
+          "resolved_url": "https://www.mteke.com/building-a-cli-tool-with-python-a-dive-into-cmd2-and-rich-libraries/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGb6z8B2_EBy0Rr3aGG6nv64zEqqqRqxZGwNPIXuyUCA4usHQUdrfRRTTcb983HFRA65YbFfWwgqRcjkofZ-nrFqHUjl-MT6vZmbh7loqCKVwBoQYdFVXg_YVqS6KQDthR-PnozYvTleRXjZQ==",
+          "resolved_url": "https://cmd2.readthedocs.io/en/latest/api/rich_utils/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH4D5wFKfJ4uFg2Q1f2Zs_7ib9Cg8RMGyF6dZMC0Y2d4KH9VnQrUuF768RQkJ_2WnFmBlhgRULT-DlU5MGLbqHQ7nnp4OapKub9eP6rx52iNAEC7pTuxV3sPFMNI8OFsW3Z4WFaujkGknjBkfI8u3h_uZGx9a9J-NAfNYvmDTiuqg==",
+          "resolved_url": "https://www.hackingtutorials.org/metasploit-tutorials/metasploit-commands/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHaJMJPXbZhqZV0oJ8dM25tQ_E-ln0nQP0q9HwzmjEKkhrNWCMaNwoEmfIWoxvPXzrq28lKKfxfnuqclddWoTwnsWM-tMlwjdTyLEpiUIVYaLaQ0RpMU93qmj9z6NH3PZfdKR48HWLD-2qsESyUEN6SqvVvTNAaO6Nnlw==",
+          "resolved_url": "https://netragard.com/blog/osint-framework-custom-maltego-transform/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHheMSG0YZjU56Mj5Qj5-KVPEH9Ta13rW0Pmu5VoiUaTj-pOAhyaZJPvTu9RazUgZ-LcbqPpSIDyf1ysy77ZzW35gEaOAbWoyl9h535fMu9ZwPn605Z0_iqfwOGMU26WkN9G1vsyAtbILHHpQ7ZGIKwaQTXX7szI9Prj2UJygdinhZ1PNPYwVSLqZ9QjRM8QS_Cn8CNkJx5EzVUutY=",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEzjsPEgw9i67N4Ra9sM2SGzxPoCWtzOQOoj_rCKJF7jmzX2EOtPFVDQRVX2bGNFxSbdJB78qDZjPvjOoByb-bUGp8ik9gw1biroA2ad15RWKHOV6H57dMh0KzTijX25ZA8KO2tAHCtvyOUitn9b8Jtezoc4BqCGuHMN-B0qfwA",
+          "resolved_url": "https://docs.rapid7.com/metasploit/manage-meterpreter-and-shell-sessions/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEk87iYxYrcpFWuu-IM97o1rWb9MXdIy9RwI4cSm92zHA8wSxR8RVTB2oi8018QC2AsyszQowT4ZyjLx65dh-bl0lTMwHmiJ3EMitRs99we2EcP_-dIWJpX_I0dK-I1BkX_npl2dqWmAKFJGlx5wa3VJZl2SnsDLD7Z89Llmi7zKZoIqoZFGdMU4gIXE8rKj8x4p5ca7Goj5izWC3Zlpnkk1xJCrClSHQ==",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFwVdZEw0tVXb6SJPLvNFrj8_QY8FmRW9XC83hn8cYwZY-mLAPx1bbyDjA_eDt1M5JVANFxUPDIUH9gXBvlT-T7qW4rrQemMTC5d4NBxQ4h33m0vHgP0bwdP4Vt9_dThwgFEnh-mgUa5KuzrZJsG6s=",
+          "resolved_url": "https://docs.python.org/3/library/importlib.metadata.html",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEYbpSZ2SDyhIXn77deU4xZVMoK2rLdmT6kfOsbKGf4gftkCwEMONFehw6stqDoDnd3kS4hAyTR-w-jqsJSe5-P0ao39e_tKgtkTgMlsXw_evQEJUwTVNiWQSAulabOhlHno5qpn39PvRHd40h0JCk=",
+          "resolved_url": "https://packaging.python.org/en/latest/specifications/entry-points/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKVEUxOpQeanz_-JmkobXNtm1mPxMK4k4t-JaEhQPX1WikwkL_DyI3Q7SLNqhBjitJDWfEmgTYxBcGejBGRgNRw9OImKT5zbd5G9AayOE_70teKpRLtF82JcOuP_7B2ORGXaK6h-6IP2yCOZoS8d4gRjg=",
+          "resolved_url": "https://docs.python.org/3.10/library/importlib.metadata.html",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHlKhgv3FZKiJloRdBN46fwOeKqIwPBB9_KRt8s82b6B5THemgDlpAxVwUYinj4uGjyXbdALDSSR65BogvKpYmlh6B3DWUpKOGYakUUj4KUfgTdKpp2KizLt4bxc8qGCHt-ePV7a8xjOb4=",
+          "resolved_url": "https://webthesis.biblio.polito.it/22846/1/tesi.pdf",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE0yDhjVw_w4kAQLSdzafsURdAl0jaPt0QOLG7AofRDsKO0N0exKDfWQaTPMtIVyu_iwtxBxOCn2M180b3I93kzhM_pbm38eSOD1WXsWAl1nJB9j9wRrAcHFa5oEePt2Ugn-L7TG3MHyA_N1xTaJh560hzxzTT9Xg==",
+          "resolved_url": "https://www.diva-portal.org/smash/get/diva2:1972275/FULLTEXT01.pdf",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH2H7hvV4jSmEA_2KDnJ3jr0Pm95NQ3Om8o_O--FMCASxyKA9GVy5WL5GhFtqVGjkJBYfaCimBWFpNWrW_K0gN_00R-z0Tpte4-LJWsnEPCKVECC6tU_WIYb4jc9fqjsjlSdLHQQj9y",
+          "resolved_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9950699/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGLWoVVvuyF5nR3AuK2CzV5SEFiHkBDDyawPsslx-uCebk2ixt6cYXNQB0-ULMuSISpuPdUWpg1tl519sPvHd2eEvs6xhR0fnIqfohKUBqBjjAuZ0qsnKPNcpWlXjDobBM3nQW1XAt0ddfq1K39Z5n7",
+          "resolved_url": "https://docs.ctfd.io/docs/custom-challenges/dynamic-value/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGfh5TJJTepsvvRf20PZLXHQCwxqcpxkZ0WPwSyc7QtKluweA398njfljHhKokmNZPVi8A0LoEoTvZSg7U2t4EhEUUjXtRSv4MsqEuass-Qu2qZ7moiPxVUiQRHGPNKWLhR9WnARDmkXkxSnCcR4wZFVC2uOPxItU0=",
+          "resolved_url": "https://blog.ctfd.io/challenge-design-improvements-in-ctfd-v1-0-5/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGkvQAdDItQsZ0L_J4_VCSJLSXTugV3a0PirFT3a4ssM0XIpqZd6KToxh7EIdilgAkRvrfe6uh1bTNM8XsJ80B0MeXWQMgZKUoIdbPijXLwHuHkJdhwEMSOck3x48Ho2k3qQ_jPRTsTpHsrmf5XWtUVT-tH1g==",
+          "resolved_url": "https://github.com/CTFd/DynamicValueChallenge?ref=blog.ctfd.io",
+          "validation": {
+            "status": "valid",
+            "depth": 2,
+            "details": "Keywords found (10/19)"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGINl356VUvKxTnYLbp20dqqe-jDBXmOf3tNYKIjht5KgCXS0YTxN8s4-F23loml_N7hJQ_HWOMQf8l1wKoZppo4hpnb21H0OUIqsRUK6oPsEknlL63OjqshM4H3QXhNpn1",
+          "resolved_url": "https://docs.ctfd.io/docs/challenges/hints/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFJ1dNmnmPqbQD-4jSw9Pfn96giugvXYDyXyeUa1Kvx1jHlRv57Ai29ka6Orfu08MNrOgb00m0wuH-Sn_jzEMpgrdO0jBSyP8HJdy5yhOP7Ku1mAZT9XaMAIZnhC-wDZ78_Basnv0OlTaDmiS2rDKNyN_oxz0NtJOf6sowYLt5ev4im0gCKU7qyKDthC6cdm94xOpVDw8h8dA==",
+          "resolved_url": "https://www.helpnetsecurity.com/2024/08/21/opencti-open-source-cyber-threat-intelligence-platform/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGyDnn2YDmF0WF_BDh_rZbpjz9uGcL43SvR_oRftl78UShaMZeJ6DhxyRGgB80qZ1velT8af2e40swowwj6mHy6TZi7VU5XjaMXvuR6AF_ori0Y_tZr3Um8abFfRRXWuMmR2vILcNbVcez593HPWc_ub2wKzlIvyBPXYp9J_-ouYBb4duiv90MZCHAKpmhC",
+          "resolved_url": "https://www.sredevops.org/en/opencti-the-open-source-cyber-threat-intelligence-platform/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEEU-vh5A_4TdpDhb9KRCQQmJFhXqyuWghP5QJKwURUWBYqfoFuBVLPLFzWnlgHCXLnjjngD-uPkm4gJq0X0lm3K4aApHPJhwmRrqfTudEpvGh5aucSb7e5yCKtodgWHKKEJQJ_dWol7xS9bmjd0MLG",
+          "resolved_url": "https://www.dogesec.com/blog/opencti_is_not_stix_database/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEoqHouqg43hww36TdJ_tupeHw15vH6ktxTPP5-uB_diLMhfqf9dLlWQSeUv36G9t3c6G82fqarrpwRgkhuKg98ffZmIDqawCTK2ukWZc3K8_Vq9iDX1cqNSE1EWsSs",
+          "resolved_url": "https://www.silentpush.com/blog/opencti/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHmxLqGdGbK42U0lunl3C9tp7W8XQDwK3WMTVgQp6C7wKmxe9JuuzdUnf1VY29tlSYmPaHlqbAiTwa_AGKALuMw4vTfNHH-9kSrkJ6cDGRqAPCM98jx6A6TSq7fvDJ2uLcubfg-6hk=",
+          "resolved_url": "https://docs.opencti.io/latest/usage/data-model/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGHUPggL0UVhTJKkrf7qC-THYDKO6fuNCJdIMx3ABKfHLT_DGZxaAX6ijtE_SMOcl6rUtUzZseXJypoZJQ9sHdJlsbuIR_UqzHQ4UgVNXYmWjSBv0ZUU-9lMIX5kfYMKNVLLX8vvpe4jAc-1qgCNv3hFlIPu2z-GebgPD-9lLLTJzIF88yHZw2eAcYTWs9tiQ==",
+          "resolved_url": "https://www.mintlify.com/iLotuus/Enterprise-SOC-Architecture/components/incident-response",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHOgGm1zoOiuCD9s4U-QPEXzTVTHRMqnjGvcjO29Jj54JccqRXOZ9tG0up10VyC1ZioSQkd4Y1xFyrQz1P7Ycw_Tbl93NOSrl1rwq91H2Twdp1Mlfs6yWDQoFUIi5905xGDqOmceMqWzZWw5qWHGHpTe2ij-zXEawa2a3tBoSzTPCPBg0_z4tKqmf7IqEIcr-PoUV6KxLdhtjNgIDhEfF9kwDt59nmmsN9gcdM8e3OcgI6NnByi",
+          "resolved_url": "https://iritt.medium.com/thehive-project-soc-level-1-digital-forensics-and-incident-response-tryhackme-walkthrough-713c89aa5c6f",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "HTTP 403"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHokac4gd_ZLtmfGfgGo_cE7ay4o6L6ZSsEbvP0zRRLKJlNN9FbPqNGJ3V0Be1YOVFYJrTSJUyZxb7VlebZhyrzh3zqCIDyDxhhtnFCgjCiWEl9_5gf5mrNiNJ1LZ7lU7jQEfxReVo_Y-jpTukpepz6_yskOe_CTIRUUXH_qDg8spoXdwMTOBTgt2LW2veD7Dx0yLMhXDuuxA==",
+          "resolved_url": "https://oneuptime.com/blog/post/2026-02-08-how-to-run-thehive-in-docker-for-incident-response/view",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEuQ1au2Q-Cbu4FHgzYqMcqw_HhUj_gcxRIGDDGu7UJhJIj9N3wSBjKTG2Bs2LXn56AnLCBsCgYRTcg542QyY6S3IVumou25ENgoSdqRimTRHDyAr81h8CmtPxVwgaAbzwJ7PSU--3m",
+          "resolved_url": "https://sourceforge.net/projects/intelowl.mirror/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvmqyaK6Utnn6HWJ5WH1mMltr7yfMiT9Q3S-LO05J-OYuvGjc2GeHxSJqBDRiM3BKYF9yKCDw4Wf1Hb3z5qEBkkKDRnMMFu_yqavZHG76_pLwugUYJdbsICIgg23Y3eQOKi7GMPIKAzL2sFHZLMTxFRscIvzQzfd5Mtz68BXoGgjPqUZSkc7QJVesBAPEaac9Uo5bbKyLLTCEdBwjTznVZk2QeSyVR",
+          "resolved_url": "https://www.loginsoft.com/post/intelowl-an-osint-tool-discovering-threat-intelligence-from-multiple-data-sources",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQECOZJjve3uqqhx5upKhxvh1xrkDF0SuGrPFn5E5A6O6y1qD_lLZnPLa-R8_VHEnVIlWe_oUWOIyx0fhPKnQzIRDfsqdwMqLs0dbkpEwZu1dVs2ruzelViFrn3LkqqDxICDsLU8URLgcFe4KIYHtRRAW4SdM6HI0FKzRkNDdo1W5e4=",
+          "resolved_url": "https://jyx.jyu.fi/bitstreams/b0d02b99-6f26-4c4b-8dd8-6f275eb287ab/download",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFSxIFxNTcYqlC2YfVqxur2DyAXFQUD-8Pfzd7gzU6RJuB9FfQhnLaDpmVTqkFvP_Puwbx9t54kczukzJgkW1O4kAPVLeduao3YW1d4ruIZrBtZVhKCoWMBkM8dqhFlwUdbhYj9Nl8LVGjBc_E=",
+          "resolved_url": "https://github.com/intelowlproject/IntelOwl/issues/628",
+          "validation": {
+            "status": "valid",
+            "depth": 2,
+            "details": "Keywords found (10/18)"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHl2yvtccFmWowUSLtGC4GY_LzEXSNGKyoW2EkSMtN_0HN0r2VUDoPFCbiogpNurFgT1HgWEwBKOuADRTdgLv2w2lGPLsklfuRk3pBtGwX23HbSSl8BXiPT8pD3V26utpHnSwzrXuZwJSi0jNBQrH-Arfzd",
+          "resolved_url": "https://intelowlproject.github.io/docs/IntelOwl/introduction/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGCRfFR6nk_3ozNzFn87Ya2PdJqRLN79jlCYPsSYdf0LSRNkqW06T97Yc_i0Em1VVJbJWe077yU7PEywKfErHrcmbJeKZ9zkFjZBj-x6Ot-emRbp-ZnBLxaWrysh0ZGa5J6lIjo",
+          "resolved_url": "https://shadowdragon.io/blog/best-osint-tools/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFZyKL4Ob5RVwVQckFQwbZdmOd8SFqziZCjgTRKRDQxb0dDfzZd8P4fL4AYADsoBXSMLzgXezcasgx67koDVXir2jzR2UO2nSQ2KP4Pww3FcEnoCl7ClMeHxnz0vvc=",
+          "resolved_url": "https://github.com/smicallef/spiderfoot",
+          "validation": {
+            "status": "valid",
+            "depth": 2,
+            "details": "Keywords found (10/17)"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBEMEa7BHaWy02PS2S0ZLSG7TkCKDx8f96xUPnvh_2rY95pJvDGe2BvvOITAMMvyUPtPQQEHSrWERkxd9i1SiUc2DOI4-KiliQDKLfxf0uIMwnbcNeaHclnkn6yLzECbV_p5KtdObvA3ShZdIk",
+          "resolved_url": "https://github.com/hslatman/awesome-threat-intelligence",
+          "validation": {
+            "status": "valid",
+            "depth": 2,
+            "details": "Keywords found (10/19)"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFOQ9B5x--evSHwIKBNgZZgm-xENDKkltAyl1PPTfFpy6ddzHRt2bd3jKXkdHPUJq5ey_6mVpdS8ypy5LIOZJ8GW2tBEnddNnwcLhtiTP3ZrcucyIzE_RkosYHxPg==",
+          "resolved_url": "https://github.com/jivoi/awesome-osint",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQE6vC29stex1y6J7vZYH9MK5fweptpmNngJ5KFfPQo_QcI7cfEAxqsdm_V7bGNYahHaQ2VnFNpQ3Jh0tnqt0yyDvycMeGvMPuRfWQHgr4NHUV-pURTZgVjd3HRP-yFZTpG6yETPeIojdgzcdiO4kC8N1yZJtuwwrM3wcMAZb7LlTYl2Y_-1n6kJi55AND_En72Izdc=",
+          "resolved_url": "https://www.threatintel.academy/resources/intelligence-and-threat-hunting-collection-sources/",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        },
+        {
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQExgPItn2cpLErwnOKxpbYZIrqz1jBpRk8hVO-7hzlER2cv9X1o0e5z4kMPe5p4vT330kN9RaUjMzmCLdYdHaXwVOaENNzjqkzUopLsg3pW2KptVTlR4FYp99Jhy7nGNclCGN3MiYwmz_cN4kfSbRemynRkfxMuyYC-q_KEF6YGtLM=",
+          "resolved_url": "https://medium.com/@AllDaySOC/threat-intelligence-feed-sources-deb5ddc41929",
+          "validation": {
+            "status": "invalid",
+            "depth": 2,
+            "details": "Citation title not found in page"
+          }
+        }
+      ],
+      "model": "deep-research-pro-preview-12-2025",
+      "elapsed_seconds": 215.2,
+      "error": null
+    }
+  ],
+  "citation_validation": {
+    "depth": 2,
+    "total": 42,
+    "valid": 5,
+    "invalid": 37,
+    "unreachable": 0,
+    "skipped": 0
+  },
+  "comparison_matrix": {
+    "providers": [
+      "gemini"
+    ],
+    "topics": [
+      {
+        "name": "adversary pursuit: design and architecture of a gamified cyber threat intelligence and osint cli framework",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "executive summary",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "methodological approach",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "interface and cli framework evaluation for python 3.12+",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "1.1 comparative analysis of python cli libraries",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "1.2 the selected stack: cmd2 + rich",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "metasploit-inspired architectural paradigms",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "2.1 modular namespace and command structure",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "2.2 workspaces and datastore",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "2.3 sessions",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "extensible plugin and module system design (python 3.12+)",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "3.1 entry points and importlib.metadata",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "3.2 defining the plugin protocol",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "ctfd-inspired gamification and progression engine",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "4.1 challenge types and design",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "4.2 dynamic scoring architecture",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "4.3 hint system and virtual economy",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "4.4 leaderboards and badges",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "integrating existing open-source cti and osint architectures",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "5.1 data modeling: the opencti and stix 2.1 standard",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "5.2 case management and observables: thehive",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "5.3 microservices and analyzers: intelowl",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "5.4 osint automation and publisher/subscriber models: spiderfoot",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "5.5 visual link analysis and pivoting: maltego",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "comprehensive osint and cti api data sources",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "6.1 vulnerability and attack surface metrics",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "6.2 ip, domain, and dns intelligence",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "6.3 data breach and social media osint",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "6.4 threat actor and ioc aggregators",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "practical implementation plan for adversary pursuit v1",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "7.1 directory and package structure",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "7.2 the console core (cmd2 + rich)",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "7.3 the gamification event hook",
+        "gemini": "mentioned",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      },
+      {
+        "name": "conclusion",
+        "gemini": "detailed",
+        "agreement": "unique-gemini",
+        "match_method": "unmatched"
+      }
+    ],
+    "citation_overlap": {},
+    "stats": {
+      "total_topics": 34,
+      "consensus": 0,
+      "majority": 0,
+      "unique": 34
+    },
+    "unmatched_hints": [
+      {
+        "provider": "gemini",
+        "heading": "adversary pursuit: design and architecture of a gamified cyber threat intelligence and osint cli framework",
+        "top_keywords": [
+          "21",
+          "312",
+          "acquisition",
+          "architecture",
+          "balance",
+          "challenge",
+          "cli",
+          "cmd2",
+          "combined",
+          "combining",
+          "commandline",
+          "complex",
+          "considered",
+          "ctfd",
+          "cybersecurity",
+          "data",
+          "decay",
+          "demonstrate",
+          "design",
+          "difficulty"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "executive summary",
+        "top_keywords": [
+          "312",
+          "adversary",
+          "analysts",
+          "apis",
+          "application",
+          "architectural",
+          "bridge",
+          "capture",
+          "cli",
+          "commandline",
+          "ctf",
+          "cti",
+          "curve",
+          "cyber",
+          "design",
+          "disconnected",
+          "disjointed",
+          "domain",
+          "engaging",
+          "experience"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "methodological approach",
+        "top_keywords": [
+          "21",
+          "advanced",
+          "analysis",
+          "applied",
+          "architectural",
+          "blueprint",
+          "cli",
+          "cybersecurity",
+          "data",
+          "derived",
+          "design",
+          "development",
+          "discovery",
+          "dissecting",
+          "document",
+          "ecosystems",
+          "education",
+          "engineering",
+          "established",
+          "exhaustive"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "interface and cli framework evaluation for python 3.12+",
+        "top_keywords": [
+          "adversary",
+          "appealing",
+          "cite",
+          "completion",
+          "console",
+          "dynamic",
+          "environment",
+          "formatting",
+          "foundational",
+          "framework",
+          "immersive",
+          "interactive",
+          "interface",
+          "layer",
+          "loading",
+          "management",
+          "metasploit",
+          "mimics",
+          "module",
+          "msfconsole"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "1.1 comparative analysis of python cli libraries",
+        "top_keywords": [
+          "acts",
+          "age",
+          "alias",
+          "applications",
+          "attempting",
+          "barebones",
+          "bars",
+          "batteriesincluded",
+          "beautiful",
+          "bronze",
+          "building",
+          "capable",
+          "cases",
+          "choose",
+          "cite",
+          "cli",
+          "clone",
+          "cmd",
+          "cmd2",
+          "command"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "1.2 the selected stack: cmd2 + rich",
+        "top_keywords": [
+          "achieve",
+          "adversary",
+          "adversarypursuit",
+          "allows",
+          "allowstyle",
+          "altering",
+          "apptheme",
+          "base",
+          "based",
+          "builtin",
+          "capabilities",
+          "cite",
+          "classes",
+          "cmd2",
+          "cmd2baseconsole",
+          "cmd2cmd",
+          "cmd2exceptionconsole",
+          "cmd2generalconsole",
+          "command",
+          "commands"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "metasploit-inspired architectural paradigms",
+        "top_keywords": [
+          "adopt",
+          "adversary",
+          "architecture",
+          "cite",
+          "conceptual",
+          "cti",
+          "flexible",
+          "framework",
+          "highly",
+          "internal",
+          "metasploits",
+          "models",
+          "organize",
+          "osint",
+          "penetration",
+          "pursuit",
+          "rigid",
+          "several",
+          "stems",
+          "success"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "2.1 modular namespace and command structure",
+        "top_keywords": [
+          "10",
+          "11",
+          "adversary",
+          "alerting",
+          "alias",
+          "apikey",
+          "apis",
+          "artifact",
+          "artifacts",
+          "auxiliary",
+          "available",
+          "categorizes",
+          "certificates",
+          "changes",
+          "cite",
+          "cmd2",
+          "commands",
+          "configures",
+          "console",
+          "context"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "2.2 workspaces and datastore",
+        "top_keywords": [
+          "12",
+          "21",
+          "act",
+          "adversary",
+          "another",
+          "backend",
+          "bleed",
+          "cite",
+          "create",
+          "credentials",
+          "cyber",
+          "data",
+          "database",
+          "discovered",
+          "engagement",
+          "ensuring",
+          "formatted",
+          "graph",
+          "hunting",
+          "implement"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "2.3 sessions",
+        "top_keywords": [
+          "12",
+          "able",
+          "active",
+          "adversary",
+          "authenticated",
+          "background",
+          "cite",
+          "command",
+          "compromised",
+          "connection",
+          "context",
+          "correlation",
+          "eg",
+          "established",
+          "host",
+          "id",
+          "instance",
+          "intelligence",
+          "intelligencegathering",
+          "interact"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "extensible plugin and module system design (python 3.12+)",
+        "top_keywords": [
+          "13",
+          "adversary",
+          "alongside",
+          "antipattern",
+          "application",
+          "approach",
+          "architecture",
+          "cite",
+          "considered",
+          "core",
+          "couples",
+          "crash",
+          "directories",
+          "effects",
+          "engineering",
+          "ensure",
+          "extensible",
+          "filesystem",
+          "forces",
+          "historical"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "3.1 entry points and importlib.metadata",
+        "top_keywords": [
+          "13",
+          "14",
+          "15",
+          "16",
+          "310",
+          "actual",
+          "adversary",
+          "advertise",
+          "allow",
+          "application",
+          "apshodanpluginmainshodaniplookup",
+          "apvtpluginmainvthashcheck",
+          "architecture",
+          "blindly",
+          "boundaries",
+          "cite",
+          "classfunction",
+          "cmd2",
+          "components",
+          "core"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "3.2 defining the plugin protocol",
+        "top_keywords": [
+          "13",
+          "21",
+          "abstract",
+          "adhering",
+          "adversary",
+          "api",
+          "approach",
+          "author",
+          "base",
+          "called",
+          "cite",
+          "class",
+          "classes",
+          "compliant",
+          "config",
+          "contracts",
+          "core",
+          "critical",
+          "def",
+          "description"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "ctfd-inspired gamification and progression engine",
+        "top_keywords": [
+          "17",
+          "18",
+          "adversary",
+          "architecture",
+          "borrowing",
+          "challenges",
+          "cite",
+          "ctf",
+          "ctfda",
+          "differentiator",
+          "economy",
+          "extrinsic",
+          "foster",
+          "framework",
+          "fundamental",
+          "gamification",
+          "incorporate",
+          "integration",
+          "intrinsic",
+          "logic"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "4.1 challenge types and design",
+        "top_keywords": [
+          "10",
+          "11",
+          "19",
+          "address",
+          "adversary",
+          "apt",
+          "associated",
+          "beyond",
+          "challenge",
+          "challenges",
+          "choice",
+          "cite",
+          "coding",
+          "contextualized",
+          "ctfd",
+          "domain",
+          "email",
+          "extracting",
+          "finding",
+          "groups"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "4.2 dynamic scoring architecture",
+        "top_keywords": [
+          "20",
+          "21",
+          "22",
+          "absolute",
+          "accurately",
+          "adversary",
+          "based",
+          "calculatedynamicscoreinitial",
+          "calculates",
+          "calibrates",
+          "challenge",
+          "challenges",
+          "cite",
+          "core",
+          "ctfd",
+          "ctfds",
+          "decay",
+          "decreases",
+          "def",
+          "difficulty"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "4.3 hint system and virtual economy",
+        "top_keywords": [
+          "23",
+          "aggregate",
+          "architecture",
+          "balances",
+          "becoming",
+          "cannot",
+          "carry",
+          "cite",
+          "cost",
+          "ctfds",
+          "drops",
+          "either",
+          "following",
+          "framework",
+          "free",
+          "hint",
+          "hints",
+          "include",
+          "insufficient",
+          "negative"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "4.4 leaderboards and badges",
+        "top_keywords": [
+          "17",
+          "18",
+          "5step",
+          "achievements",
+          "adversary",
+          "aggregations",
+          "awarded",
+          "badges",
+          "behavioral",
+          "bloods",
+          "calculating",
+          "cite",
+          "database",
+          "elo",
+          "executing",
+          "feature",
+          "first",
+          "hint",
+          "leaderboard",
+          "live"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "integrating existing open-source cti and osint architectures",
+        "top_keywords": [
+          "adversary",
+          "architecture",
+          "build",
+          "comprehensive",
+          "draw",
+          "established",
+          "frameworks",
+          "giants",
+          "heavily",
+          "intelligence",
+          "intelowl",
+          "internal",
+          "like",
+          "maltego",
+          "opencti",
+          "operational",
+          "patterns",
+          "pursuit",
+          "shoulders",
+          "spiderfoot"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "5.1 data modeling: the opencti and stix 2.1 standard",
+        "top_keywords": [
+          "21",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "actors",
+          "address",
+          "addresses",
+          "adopting",
+          "adversary",
+          "against",
+          "architectural",
+          "attack",
+          "built",
+          "centralized",
+          "cite",
+          "collected",
+          "command",
+          "concepts"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "5.2 case management and observables: thehive",
+        "top_keywords": [
+          "29",
+          "30",
+          "31",
+          "actionable",
+          "adversary",
+          "alerts",
+          "analyst",
+          "architecture",
+          "attached",
+          "audit",
+          "case",
+          "cases",
+          "cite",
+          "discovered",
+          "enrichment",
+          "extracting",
+          "feature",
+          "heavily",
+          "hunt",
+          "immutable"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "5.3 microservices and analyzers: intelowl",
+        "top_keywords": [
+          "32",
+          "33",
+          "34",
+          "35",
+          "36",
+          "abstracted",
+          "abuseipdb",
+          "adversary",
+          "allowing",
+          "analyzer",
+          "analyzers",
+          "api",
+          "architecture",
+          "automated",
+          "automates",
+          "chain",
+          "cite",
+          "collection",
+          "connector",
+          "connectors"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "5.4 osint automation and publisher/subscriber models: spiderfoot",
+        "top_keywords": [
+          "200",
+          "37",
+          "38",
+          "address",
+          "addresses",
+          "adversary",
+          "architecture",
+          "artifact",
+          "asyncio",
+          "attack",
+          "automates",
+          "automatically",
+          "autopivot",
+          "bus",
+          "cascading",
+          "cite",
+          "collection",
+          "core",
+          "correlation",
+          "creating"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "5.5 visual link analysis and pivoting: maltego",
+        "top_keywords": [
+          "10",
+          "11",
+          "38",
+          "adversary",
+          "allowing",
+          "although",
+          "analysis",
+          "cite",
+          "cli",
+          "data",
+          "entities",
+          "entity",
+          "entityid",
+          "excels",
+          "execute",
+          "expanding",
+          "export",
+          "external",
+          "graph",
+          "graphvizgexf"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "comprehensive osint and cti api data sources",
+        "top_keywords": [
+          "39",
+          "40",
+          "access",
+          "adversary",
+          "apis",
+          "architecture",
+          "awesomeosint",
+          "awesomethreatintelligence",
+          "cite",
+          "curated",
+          "data",
+          "framework",
+          "include",
+          "like",
+          "native",
+          "osint",
+          "plugin",
+          "powerful",
+          "pursuit",
+          "repositories"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "6.1 vulnerability and attack surface metrics",
+        "top_keywords": [
+          "40",
+          "41",
+          "assessing",
+          "associated",
+          "availability",
+          "banners",
+          "censys",
+          "cite",
+          "cves",
+          "devices",
+          "engines",
+          "exploit",
+          "internetconnected",
+          "nvd",
+          "open",
+          "ports",
+          "returning",
+          "search",
+          "shodan",
+          "tracking"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "6.2 ip, domain, and dns intelligence",
+        "top_keywords": [
+          "34",
+          "39",
+          "41",
+          "abuseipdb",
+          "across",
+          "activity",
+          "actor",
+          "addresses",
+          "advanced",
+          "aggregating",
+          "antivirus",
+          "associated",
+          "authoritative",
+          "blacklist",
+          "cite",
+          "communitydriven",
+          "comprehensive",
+          "crucial",
+          "database",
+          "dbl"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "6.3 data breach and social media osint",
+        "top_keywords": [
+          "10",
+          "40",
+          "accounts",
+          "across",
+          "addresses",
+          "appear",
+          "checking",
+          "cite",
+          "credenshow",
+          "data",
+          "domains",
+          "dumps",
+          "effective",
+          "email",
+          "engineering",
+          "footprinting",
+          "haveibeenpwned",
+          "hibp",
+          "highly",
+          "hundreds"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "6.4 threat actor and ioc aggregators",
+        "top_keywords": [
+          "39",
+          "41",
+          "42",
+          "access",
+          "active",
+          "alienvault",
+          "cite",
+          "community",
+          "communitygenerated",
+          "data",
+          "delivering",
+          "extortion",
+          "global",
+          "group",
+          "leak",
+          "monitoring",
+          "open",
+          "opensource",
+          "otx",
+          "ransomware"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "practical implementation plan for adversary pursuit v1",
+        "top_keywords": [
+          "312",
+          "application",
+          "cohesive",
+          "discussed",
+          "integrating",
+          "organization",
+          "paradigms",
+          "python",
+          "requires",
+          "strict",
+          "structural"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "7.1 directory and package structure",
+        "top_keywords": [
+          "21",
+          "abstraction",
+          "adversarypursuit",
+          "application",
+          "baseplugins",
+          "build",
+          "challenge",
+          "challengespy",
+          "checking",
+          "cmd2",
+          "connection",
+          "consolepy",
+          "core",
+          "cti",
+          "database",
+          "decay",
+          "definitions",
+          "dependencies",
+          "dynamic",
+          "entry"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "7.2 the console core (cmd2 + rich)",
+        "top_keywords": [
+          "21",
+          "adversary",
+          "adversarypursuitcorepluginmgr",
+          "apconsolecmd2cmd",
+          "args",
+          "argsstrip",
+          "bluemodulenameblue",
+          "bold",
+          "cite",
+          "class",
+          "cli",
+          "cmd2",
+          "commands",
+          "console",
+          "core",
+          "currently",
+          "def",
+          "default",
+          "dorunself",
+          "douseself"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "7.3 the gamification event hook",
+        "top_keywords": [
+          "active",
+          "address",
+          "against",
+          "application",
+          "artifact",
+          "challenge",
+          "challengeawardpoints",
+          "challenges",
+          "challengeverifyflagobservable",
+          "check",
+          "checkchallengesself",
+          "cti",
+          "data",
+          "datastore",
+          "def",
+          "discovered",
+          "earned",
+          "eg",
+          "engine",
+          "flags"
+        ]
+      },
+      {
+        "provider": "gemini",
+        "heading": "conclusion",
+        "top_keywords": [
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29"
+        ]
+      }
+    ]
+  }
+}
