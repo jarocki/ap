@@ -1,0 +1,8 @@
+Pre-F60 baseline (no budget): 45 callbacks for 15 CDN domains x 3 modules
+Post-F60 default (max_per_cascade=5, max_per_session=50): 5 callbacks
+Reduction: 40 fewer callbacks (88% reduction)
+
+Detail per module (post-F60):
+  osint/dns_resolve: 2 calls (max_per_cascade=5)
+  osint/whois_lookup: 2 calls (max_per_cascade=5)
+  cti/otx: 1 calls (max_per_cascade=5)
