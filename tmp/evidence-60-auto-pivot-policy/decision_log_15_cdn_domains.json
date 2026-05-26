@@ -1,0 +1,407 @@
+[
+  {
+    "source_sco_id": "domain--0",
+    "source_sco_value": "cdn1.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--0",
+    "source_sco_value": "cdn1.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--0",
+    "source_sco_value": "cdn1.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--1",
+    "source_sco_value": "cdn2.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--1",
+    "source_sco_value": "cdn2.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--1",
+    "source_sco_value": "cdn2.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--2",
+    "source_sco_value": "cdn3.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--2",
+    "source_sco_value": "cdn3.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--2",
+    "source_sco_value": "cdn3.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--3",
+    "source_sco_value": "cdn4.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--3",
+    "source_sco_value": "cdn4.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--3",
+    "source_sco_value": "cdn4.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--4",
+    "source_sco_value": "cdn5.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--4",
+    "source_sco_value": "cdn5.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--4",
+    "source_sco_value": "cdn5.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--5",
+    "source_sco_value": "cdn6.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--5",
+    "source_sco_value": "cdn6.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--5",
+    "source_sco_value": "cdn6.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--6",
+    "source_sco_value": "cdn7.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--6",
+    "source_sco_value": "cdn7.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--6",
+    "source_sco_value": "cdn7.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--7",
+    "source_sco_value": "cdn8.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--7",
+    "source_sco_value": "cdn8.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--7",
+    "source_sco_value": "cdn8.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--8",
+    "source_sco_value": "cdn9.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--8",
+    "source_sco_value": "cdn9.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--8",
+    "source_sco_value": "cdn9.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--9",
+    "source_sco_value": "cdn10.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--9",
+    "source_sco_value": "cdn10.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--9",
+    "source_sco_value": "cdn10.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--10",
+    "source_sco_value": "cdn11.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--10",
+    "source_sco_value": "cdn11.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--10",
+    "source_sco_value": "cdn11.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--11",
+    "source_sco_value": "cdn12.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--11",
+    "source_sco_value": "cdn12.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--11",
+    "source_sco_value": "cdn12.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--12",
+    "source_sco_value": "cdn13.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--12",
+    "source_sco_value": "cdn13.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--12",
+    "source_sco_value": "cdn13.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--13",
+    "source_sco_value": "cdn14.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--13",
+    "source_sco_value": "cdn14.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--13",
+    "source_sco_value": "cdn14.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--14",
+    "source_sco_value": "cdn15.example-infra.net",
+    "candidate_module": "osint/dns_resolve",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--14",
+    "source_sco_value": "cdn15.example-infra.net",
+    "candidate_module": "osint/whois_lookup",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  },
+  {
+    "source_sco_id": "domain--14",
+    "source_sco_value": "cdn15.example-infra.net",
+    "candidate_module": "cti/otx",
+    "gate": "allow",
+    "verdict": "allow",
+    "reason": "passed all gates",
+    "depth": 1
+  }
+]
