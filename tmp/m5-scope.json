@@ -1,0 +1,61 @@
+{
+  "allowed_paths": [
+    "src/adversary_pursuit/dossier/slot_inference.py",
+    "src/adversary_pursuit/dossier/predictions.py",
+    "src/adversary_pursuit/dossier/scoring.py",
+    "src/adversary_pursuit/dossier/__init__.py",
+    "src/adversary_pursuit/agent/tools.py",
+    "src/adversary_pursuit/core/console.py",
+    "src/adversary_pursuit/agent/chat.py",
+    "tests/test_dossier_slot_inference.py",
+    "tests/test_dossier_predictions.py",
+    "tests/test_dossier_predictions_serialization.py",
+    "tests/test_dossier_scoring.py",
+    "tests/test_dossier_state.py",
+    "tests/test_agent_tools.py",
+    "tests/test_chat_dossier_metacommand.py",
+    "tests/test_dossier_persistence_integration.py",
+    "tests/test_dossier_get_state_tool.py",
+    "MASTER_PLAN.md",
+    ".claude/plans/dossier-m5-denial-strategies.md",
+    "tmp/m5-scope.json"
+  ],
+  "required_paths": [
+    "src/adversary_pursuit/dossier/slot_inference.py",
+    "src/adversary_pursuit/dossier/predictions.py",
+    "src/adversary_pursuit/dossier/scoring.py",
+    "src/adversary_pursuit/dossier/__init__.py",
+    "src/adversary_pursuit/agent/tools.py",
+    "src/adversary_pursuit/agent/chat.py",
+    "MASTER_PLAN.md",
+    ".claude/plans/dossier-m5-denial-strategies.md"
+  ],
+  "forbidden_paths": [
+    "src/adversary_pursuit/core/workspace.py",
+    "src/adversary_pursuit/models/database.py",
+    "src/adversary_pursuit/dossier/slots.py",
+    "src/adversary_pursuit/dossier/panel.py",
+    "src/adversary_pursuit/dossier/state.py",
+    "src/adversary_pursuit/gamification/scoring.py",
+    "src/adversary_pursuit/gamification/celebrations.py",
+    "src/adversary_pursuit/gamification/modes.py",
+    "src/adversary_pursuit/core/streak.py",
+    "src/adversary_pursuit/core/pivot_policy.py",
+    "src/adversary_pursuit/core/event_bus.py",
+    "src/adversary_pursuit/agent/runner.py",
+    "pyproject.toml",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "settings.json",
+    "hooks/HOOKS.md",
+    "runtime/cli.py",
+    "runtime/schemas.py"
+  ],
+  "authority_domains": [
+    "score_events_sentinel_rows",
+    "analyst_notes_table",
+    "dossier_state_in_memory",
+    "predictions_log_in_memory",
+    "dossier_actions_filter"
+  ]
+}
