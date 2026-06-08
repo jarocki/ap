@@ -1,0 +1,62 @@
+{
+  "allowed_paths": [
+    "src/adversary_pursuit/core/dossier_pivot.py",
+    "src/adversary_pursuit/core/event_bus.py",
+    "src/adversary_pursuit/core/pivot_policy.py",
+    "src/adversary_pursuit/core/config.py",
+    "src/adversary_pursuit/agent/tools.py",
+    "tests/test_dossier_pivot.py",
+    "tests/test_dossier_pivot_eventbus.py",
+    "tests/test_dossier_pivot_integration.py",
+    "tests/test_agent_tools.py",
+    "tests/test_config.py",
+    "tests/test_event_bus.py",
+    "tests/test_pivot_policy.py",
+    "MASTER_PLAN.md",
+    ".claude/plans/dossier-m6-dossier-aware-pivot.md",
+    "tmp/m6-scope.json"
+  ],
+  "required_paths": [
+    "src/adversary_pursuit/core/dossier_pivot.py",
+    "src/adversary_pursuit/core/event_bus.py",
+    "src/adversary_pursuit/core/config.py",
+    "src/adversary_pursuit/agent/tools.py",
+    "tests/test_dossier_pivot.py",
+    "tests/test_dossier_pivot_eventbus.py",
+    "tests/test_dossier_pivot_integration.py",
+    "MASTER_PLAN.md",
+    ".claude/plans/dossier-m6-dossier-aware-pivot.md"
+  ],
+  "forbidden_paths": [
+    "src/adversary_pursuit/core/workspace.py",
+    "src/adversary_pursuit/core/console.py",
+    "src/adversary_pursuit/core/streak.py",
+    "src/adversary_pursuit/models/database.py",
+    "src/adversary_pursuit/dossier/slots.py",
+    "src/adversary_pursuit/dossier/state.py",
+    "src/adversary_pursuit/dossier/predictions.py",
+    "src/adversary_pursuit/dossier/scoring.py",
+    "src/adversary_pursuit/dossier/slot_inference.py",
+    "src/adversary_pursuit/dossier/panel.py",
+    "src/adversary_pursuit/dossier/__init__.py",
+    "src/adversary_pursuit/gamification/scoring.py",
+    "src/adversary_pursuit/gamification/celebrations.py",
+    "src/adversary_pursuit/gamification/modes.py",
+    "src/adversary_pursuit/agent/runner.py",
+    "src/adversary_pursuit/agent/chat.py",
+    "pyproject.toml",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "settings.json",
+    "hooks/HOOKS.md",
+    "runtime/cli.py",
+    "runtime/schemas.py"
+  ],
+  "authority_domains": [
+    "dossier_pivot_ranker_in_memory",
+    "auto_pivot_policy_config",
+    "event_bus_process_results_kwarg",
+    "decision_log_diagnostic_field",
+    "dossier_state_in_memory"
+  ]
+}
