@@ -22,7 +22,8 @@
     "MASTER_PLAN.md",
     ".claude/plans/dossier-m8-cleanup-novelty.md",
     "tmp/m8-scope.json",
-    "tmp/evidence-m8-cleanup-novelty/"
+    "tmp/evidence-m8-cleanup-novelty/",
+    "tests/test_dossier_get_state_tool.py"
   ],
   "required_paths": [
     "src/adversary_pursuit/dossier/novelty.py",
