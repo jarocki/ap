@@ -15,7 +15,7 @@
     "tests/test_agent_tools.py",
     "tests/test_dossier_get_state_tool.py",
     "tests/test_m8_cleanup_audit.py",
-    "tmp/evidence-m9-crowdsourced-comparison/",
+    "tmp/evidence-m9-crowdsourced-comparison/*",
     "tmp/m9-scope.json",
     "tmp/m9-evaluation.json",
     "MASTER_PLAN.md",
