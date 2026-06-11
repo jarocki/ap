@@ -1,0 +1,31 @@
+{
+  "allowed_paths": [
+    "MASTER_PLAN.md",
+    "DECISIONS.md",
+    "scripts/regen_decisions.py",
+    "tests/test_regen_decisions.py",
+    "tmp/hygiene-scope.json"
+  ],
+  "required_paths": [
+    "MASTER_PLAN.md",
+    "scripts/regen_decisions.py",
+    "DECISIONS.md"
+  ],
+  "forbidden_paths": [
+    "src/adversary_pursuit/core/workspace.py",
+    "src/adversary_pursuit/models/database.py",
+    "src/adversary_pursuit/dossier/state.py",
+    "src/adversary_pursuit/dossier/predictions.py",
+    "src/adversary_pursuit/dossier/novelty.py",
+    "src/adversary_pursuit/dossier/export.py",
+    "src/adversary_pursuit/dossier/import_.py",
+    "src/adversary_pursuit/dossier/comparison.py",
+    "src/adversary_pursuit/agent/runner.py",
+    "src/adversary_pursuit/agent/tools.py",
+    "src/adversary_pursuit/gamification/modes.py",
+    "pyproject.toml"
+  ],
+  "authority_domains": [
+    "decisions_index_regen"
+  ]
+}
