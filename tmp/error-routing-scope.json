@@ -1,0 +1,58 @@
+{
+  "allowed_paths": [
+    "src/adversary_pursuit/core/error_interpreter.py",
+    "src/adversary_pursuit/agent/tools.py",
+    "src/adversary_pursuit/agent/chat.py",
+    "tests/test_error_interpreter.py",
+    "tests/test_agent_tools.py",
+    "MASTER_PLAN.md",
+    ".claude/plans/error-routing-2026-06-11.md",
+    "tmp/error-routing-scope.json",
+    "tmp/error-routing-evaluation.json",
+    "tmp/evidence-error-routing-2026-06-11/"
+  ],
+  "required_paths": [
+    "src/adversary_pursuit/core/error_interpreter.py",
+    "src/adversary_pursuit/agent/tools.py",
+    "src/adversary_pursuit/agent/chat.py",
+    "tests/test_error_interpreter.py",
+    "tests/test_agent_tools.py",
+    "MASTER_PLAN.md",
+    ".claude/plans/error-routing-2026-06-11.md"
+  ],
+  "forbidden_paths": [
+    "src/adversary_pursuit/agent/runner.py",
+    "src/adversary_pursuit/agent/error_handler.py",
+    "src/adversary_pursuit/agent/banner.py",
+    "src/adversary_pursuit/agent/repl_input.py",
+    "src/adversary_pursuit/core/console.py",
+    "src/adversary_pursuit/core/workspace.py",
+    "src/adversary_pursuit/core/event_bus.py",
+    "src/adversary_pursuit/core/pivot_policy.py",
+    "src/adversary_pursuit/core/dossier_pivot.py",
+    "src/adversary_pursuit/core/dossier_report.py",
+    "src/adversary_pursuit/core/streak.py",
+    "src/adversary_pursuit/core/config.py",
+    "src/adversary_pursuit/core/graph.py",
+    "src/adversary_pursuit/models/database.py",
+    "src/adversary_pursuit/models/stix.py",
+    "src/adversary_pursuit/dossier/",
+    "src/adversary_pursuit/gamification/",
+    "src/adversary_pursuit/modules/",
+    "scripts/smoke_test.py",
+    "pyproject.toml",
+    "uv.lock",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "settings.json",
+    "hooks/",
+    "runtime/",
+    "agents/"
+  ],
+  "authority_domains": [
+    "error_classification_catalog",
+    "friendly_panel_rendering_chat_tool_dispatch",
+    "tool_context_console_reference",
+    "llm_facing_error_marker_convention"
+  ]
+}
