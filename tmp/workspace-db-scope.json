@@ -1,0 +1,67 @@
+{
+  "allowed_paths": [
+    "src/adversary_pursuit/core/workspace.py",
+    "src/adversary_pursuit/core/console.py",
+    "src/adversary_pursuit/agent/chat.py",
+    "tests/test_workspace.py",
+    "tests/test_console.py",
+    "tests/test_chat_workspace_parity.py",
+    "MASTER_PLAN.md",
+    ".claude/plans/workspace-db-2026-06-11.md",
+    "tmp/workspace-db-scope.json",
+    "tmp/workspace-db-evaluation.json"
+  ],
+  "required_paths": [
+    "src/adversary_pursuit/core/workspace.py",
+    "src/adversary_pursuit/core/console.py",
+    "src/adversary_pursuit/agent/chat.py",
+    "tests/test_workspace.py",
+    "tests/test_console.py",
+    "tests/test_chat_workspace_parity.py",
+    "MASTER_PLAN.md"
+  ],
+  "forbidden_paths": [
+    "src/adversary_pursuit/models/database.py",
+    "src/adversary_pursuit/models/stix.py",
+    "src/adversary_pursuit/agent/runner.py",
+    "src/adversary_pursuit/agent/tools.py",
+    "src/adversary_pursuit/agent/error_handler.py",
+    "src/adversary_pursuit/agent/banner.py",
+    "src/adversary_pursuit/agent/provider_setup.py",
+    "src/adversary_pursuit/agent/repl_input.py",
+    "src/adversary_pursuit/core/error_interpreter.py",
+    "src/adversary_pursuit/core/config.py",
+    "src/adversary_pursuit/core/event_bus.py",
+    "src/adversary_pursuit/core/pivot_policy.py",
+    "src/adversary_pursuit/core/dossier_pivot.py",
+    "src/adversary_pursuit/core/streak.py",
+    "src/adversary_pursuit/core/dossier_report.py",
+    "src/adversary_pursuit/core/graph.py",
+    "src/adversary_pursuit/dossier/",
+    "src/adversary_pursuit/gamification/",
+    "src/adversary_pursuit/modules/",
+    "pyproject.toml",
+    "uv.lock",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "settings.json",
+    "hooks/",
+    "runtime/",
+    "agents/",
+    "scripts/smoke_test.py"
+  ],
+  "authority_domains": [
+    "workspace_row_mutation_clear",
+    "workspace_status_display_helpers",
+    "workspace_clear_confirmation_gate",
+    "chat_workspace_command_parser",
+    "db_status_render_helper"
+  ],
+  "state_domains": [
+    "workspace_row_mutation_clear",
+    "workspace_status_display_helpers",
+    "workspace_clear_confirmation_gate",
+    "chat_workspace_command_parser",
+    "db_status_render_helper"
+  ]
+}
