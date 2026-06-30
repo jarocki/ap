@@ -1,0 +1,57 @@
+# @decision DEC-REGEN-WIRED-001
+# @title scripts/regen_decisions.py wired into GitHub Actions on push to main
+# @status accepted
+# @rationale 06-29 reckoning Confront #4: regen tool is a one-shot, not a
+#   contract. Without CI wiring, DECISIONS.md silently drifts. This workflow
+#   makes regen part of the push-to-main flow so the registry stays fresh
+#   automatically. Commits authored by github-actions[bot] to distinguish from
+#   human commits. paths: filter excludes DECISIONS.md itself so the
+#   auto-commit does not re-trigger the workflow.
+
+name: Regen DECISIONS.md
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/regen_decisions.py'
+      - 'MASTER_PLAN.md'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regen-decisions
+  cancel-in-progress: false
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Run regen
+        run: python3 scripts/regen_decisions.py
+
+      - name: Commit DECISIONS.md if changed
+        run: |
+          set -e
+          if git diff --quiet DECISIONS.md; then
+            echo "DECISIONS.md unchanged; no commit needed"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DECISIONS.md
+          git commit -m "chore(decisions): auto-regen via GitHub Actions"
+          git push origin HEAD:main
